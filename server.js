@@ -86,7 +86,7 @@ getAll.mongodb = function(response) {
 app.post("/api/ipn", function(request,response){
   console.log(request);
   
-  res.json({
+  response.json({
     message: "listen korechi"
 }); 
 });
