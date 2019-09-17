@@ -81,6 +81,15 @@ getAll.mongodb = function(response) {
 *   "name": "Bob"
 * }
 */
+
+//IPN
+app.post("/api/ipn", function(request,response){
+  console.log(request);
+  
+  res.json({
+    message: "listen korechi"
+}); 
+});
 app.post("/api/visitors", function (request, response) {
   var userName = request.body.name;
   var doc = { "name" : userName };
