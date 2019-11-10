@@ -88,7 +88,20 @@ getAll.mongodb = function(response) {
 * }
 */
 app.get("/api/payment", function (request, response) {
-  response.sendFile(__dirname + '/views/demo.html');
+  if (request.query && request.query.invoice) {
+    console.log(request.query.invoice);
+    response.sendFile(__dirname + '/views/demo.html');
+  } else {
+    response.status(400);
+    response.json(
+      {
+        "status": "FAILED",
+        "message":"Wrong Request"
+
+      });
+  }
+  
+  
 });
 app.get("/api/payment/bkash", function (request, response) {
   response.sendFile(__dirname + '/views/bkash.html');
