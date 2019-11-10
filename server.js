@@ -87,7 +87,12 @@ getAll.mongodb = function(response) {
 *   "name": "Bob"
 * }
 */
-
+app.get("/api/payment", function (request, response) {
+  response.sendFile(__dirname + '/views/demo.html');
+});
+app.get("/api/payment/bkash", function (request, response) {
+  response.sendFile(__dirname + '/views/bkash.html');
+});
 //IPN
 app.post("/api/ipn", function(request,response){
   console.log(request);
