@@ -1,9 +1,21 @@
 var express = require("express");
+var hbs = require('express-handlebars');
 var app = express();
 var cfenv = require("cfenv");
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+const fetch = require('node-fetch');
 
-app.use(function(req, res, next) {
+var baseUrl = "http://103.221.253.163:8080";
+
+app.set('view engine', 'hbs');
+app.engine('hbs', hbs({
+  extname: 'hbs',
+  defaultView: 'default',
+  layoutsDir: __dirname + '/views/',
+  partialsDir: __dirname + '/views/'
+}));
+
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
@@ -17,8 +29,8 @@ app.use(bodyParser.json())
 
 let mydb, cloudant;
 var vendor; // Because the MongoDB and Cloudant use different API commands, we
-            // have to check which command should be used based on the database
-            // vendor.
+// have to check which command should be used based on the database
+// vendor.
 var dbName = 'mydb';
 
 // Separate functions are provided for inserting/retrieving content from
@@ -29,8 +41,8 @@ var dbName = 'mydb';
 var insertOne = {};
 var getAll = {};
 
-insertOne.cloudant = function(doc, response) {
-  mydb.insert(doc, function(err, body, header) {
+insertOne.cloudant = function (doc, response) {
+  mydb.insert(doc, function (err, body, header) {
     if (err) {
       console.log('[mydb.insert] ', err.message);
       response.send("Error");
@@ -41,12 +53,12 @@ insertOne.cloudant = function(doc, response) {
   });
 }
 
-getAll.cloudant = function(response) {
-  var names = [];  
-  mydb.list({ include_docs: true }, function(err, body) {
+getAll.cloudant = function (response) {
+  var names = [];
+  mydb.list({ include_docs: true }, function (err, body) {
     if (!err) {
-      body.rows.forEach(function(row) {
-        if(row.doc.name)
+      body.rows.forEach(function (row) {
+        if (row.doc.name)
           names.push(row.doc.name);
       });
       response.json(names);
@@ -57,8 +69,8 @@ getAll.cloudant = function(response) {
 
 let collectionName = 'mycollection'; // MongoDB requires a collection name.
 
-insertOne.mongodb = function(doc, response) {
-  mydb.collection(collectionName).insertOne(doc, function(err, body, header) {
+insertOne.mongodb = function (doc, response) {
+  mydb.collection(collectionName).insertOne(doc, function (err, body, header) {
     if (err) {
       console.log('[mydb.insertOne] ', err.message);
       response.send("Error");
@@ -69,11 +81,11 @@ insertOne.mongodb = function(doc, response) {
   });
 }
 
-getAll.mongodb = function(response) {
+getAll.mongodb = function (response) {
   var names = [];
-  mydb.collection(collectionName).find({}, {fields:{_id: 0, count: 0}}).toArray(function(err, result) {
+  mydb.collection(collectionName).find({}, { fields: { _id: 0, count: 0 } }).toArray(function (err, result) {
     if (!err) {
-      result.forEach(function(row) {
+      result.forEach(function (row) {
         names.push(row.name);
       });
       response.json(names);
@@ -87,37 +99,88 @@ getAll.mongodb = function(response) {
 *   "name": "Bob"
 * }
 */
-app.get("/api/payment", function (request, response) {
+
+app.get("/api/test", function (request, response) {
+  response.render("dupayment", {layout: 'default'});
+});
+app.get("/api/payment", async function (request, response) {
   if (request.query && request.query.invoice) {
-    console.log(request.query.invoice);
-    response.sendFile(__dirname + '/views/demo.html');
-  } else {
-    response.status(400);
-    response.json(
-      {
-        "status": "FAILED",
-        "message":"Wrong Request"
+    var invoice = request.query.invoice
+    console.log(invoice);
+
+    await fetch(baseUrl + "/api/external/invoice/" + invoice)
+      .then(async function (res) {
+        console.log(res);
+        var json = await res.json();
+        console.log(json);
+
+
+        if (res && res.status == 200) {
+          if (json.status == 'expired' || json.status == 'completed') {
+            response.render("error", { layout: 'default', message: "Invoice Expired" });
+          } else if (json.status == 'completed') {
+            response.render("error", { layout: 'default', message: "Invoice Completed" });
+          } else {
+            response.render("payment", { layout: 'default', invoice: json });
+          }
+
+        }
+        else {
+          response.render("error", { layout: 'default', message: "Wrong Request" });
+        }
+
 
       });
+  } else {
+    response.render("error", { layout: 'default', message: "Wrong Request" });
   }
-  
-  
+
+
 });
-app.get("/api/payment/bkash", function (request, response) {
-  response.sendFile(__dirname + '/views/bkash.html');
+app.get("/api/payment/bkash", async function (request, response) {
+  if (request.query && request.query.invoice) {
+    var invoice = request.query.invoice
+    console.log(invoice);
+
+    await fetch(baseUrl + "/api/external/invoice/" + invoice)
+      .then(async function (res) {
+        console.log(res);
+        var json = await res.json();
+        console.log(json);
+
+
+        if (res && res.status == 200) {
+          if (json.status == 'expired') {
+            response.render("error", { layout: 'default', message: "Invoice Expired" });
+          } else if (json.status == 'completed') {
+            response.render("error", { layout: 'default', message: "Invoice Completed" });
+          } else {
+            response.render("bkash", { layout: 'default', invoice: json });
+          }
+
+        }
+        else {
+          response.render("error", { layout: 'default', message: "Wrong Request" });
+        }
+
+
+      });
+  } else {
+    response.render("error", { layout: 'default', message: "Wrong Request" });
+  }
 });
 //IPN
-app.post("/api/ipn", function(request,response){
+app.post("/api/ipn", function (request, response) {
   console.log(request);
-  
+
   response.json({
     message: "listen korechi"
-}); 
+  });
 });
 app.post("/api/visitors", function (request, response) {
   var userName = request.body.name;
-  var doc = { "name" : userName };
-  if(!mydb) {
+  var doc = { "name": userName };
+  if (!mydb) {
     console.log("No database.");
     response.send(doc);
     return;
@@ -138,7 +201,7 @@ app.post("/api/visitors", function (request, response) {
  */
 app.get("/api/visitors", function (request, response) {
   var names = [];
-  if(!mydb) {
+  if (!mydb) {
     response.json(names);
     return;
   }
@@ -152,7 +215,7 @@ try {
   console.log("Loaded local VCAP", vcapLocal);
 } catch (e) { }
 
-const appEnvOpts = vcapLocal ? { vcap: vcapLocal} : {}
+const appEnvOpts = vcapLocal ? { vcap: vcapLocal } : {}
 
 const appEnv = cfenv.getAppEnv(appEnvOpts);
 
@@ -164,7 +227,7 @@ if (appEnv.services['compose-for-mongodb'] || appEnv.getService(/.*[Mm][Oo][Nn][
 
   // Initialize database with credentials
   if (appEnv.services['compose-for-mongodb']) {
-    MongoClient.connect(appEnv.services['compose-for-mongodb'][0].credentials.uri, null, function(err, db) {
+    MongoClient.connect(appEnv.services['compose-for-mongodb'][0].credentials.uri, null, function (err, db) {
       if (err) {
         console.log(err);
       } else {
@@ -175,7 +238,7 @@ if (appEnv.services['compose-for-mongodb'] || appEnv.getService(/.*[Mm][Oo][Nn][
   } else {
     // user-provided service with 'mongodb' in its name
     MongoClient.connect(appEnv.getService(/.*[Mm][Oo][Nn][Gg][Oo].*/).credentials.uri, null,
-      function(err, db) {
+      function (err, db) {
         if (err) {
           console.log(err);
         } else {
@@ -196,19 +259,19 @@ if (appEnv.services['compose-for-mongodb'] || appEnv.getService(/.*[Mm][Oo][Nn][
     // CF service named 'cloudantNoSQLDB'
     cloudant = Cloudant(appEnv.services['cloudantNoSQLDB'][0].credentials);
   } else {
-     // user-provided service with 'cloudant' in its name
-     cloudant = Cloudant(appEnv.getService(/cloudant/).credentials);
+    // user-provided service with 'cloudant' in its name
+    cloudant = Cloudant(appEnv.getService(/cloudant/).credentials);
   }
-} else if (process.env.CLOUDANT_URL){
+} else if (process.env.CLOUDANT_URL) {
   cloudant = Cloudant(process.env.CLOUDANT_URL);
 }
-if(cloudant) {
+if (cloudant) {
   //database name
   dbName = 'mydb';
 
   // Create a new "mydb" database.
-  cloudant.db.create(dbName, function(err, data) {
-    if(!err) //err if database doesn't already exists
+  cloudant.db.create(dbName, function (err, data) {
+    if (!err) //err if database doesn't already exists
       console.log("Created database: " + dbName);
   });
 
@@ -220,10 +283,11 @@ if(cloudant) {
 
 //serve static file (index.html, images, css)
 app.use(express.static(__dirname + '/views'));
+//app.use('/scripts', express.static(path.join(__dirname, '/publict/scripts')));
 
 
 
 var port = process.env.PORT || 8080
-app.listen(port, function() {
-    console.log("To view your app, open this link in your browser: http://localhost:" + port);
+app.listen(port, function () {
+  console.log("To view your app, open this link in your browser: http://localhost:" + port);
 });

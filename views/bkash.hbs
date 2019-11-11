@@ -1,0 +1,101 @@
+<script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
+<button id="bKash_button">Pay Bkash</button>
+<script>
+    $(document).ready(function () {
+
+        var invoice = "{{invoice.id}}";
+        var baseUrl = "http://103.221.253.163:8080";
+        var paymentUrl = "http://10.100.100.205:8080/api/payment"
+        var paymentID = null;
+        var paymentRequest = { amount: {{invoice.amount}}, intent: 'sale', currency: 'BDT', merchantInvoiceNumber: invoice};
+
+        bKash.init({
+            paymentMode: 'checkout',
+            paymentRequest: paymentRequest,
+            createRequest: function (request) {
+
+                $.ajax({
+                    url: baseUrl + "/api/external/bkash/payment",
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: "json",
+                    data: JSON.stringify({
+                        "merchantInvoiceNumber": invoice
+                    }),
+                    beforeSend: function () {
+                        $("#bKash_button").hide();
+                    },
+                    success: function (obj) {
+                        console.log(JSON.stringify(obj));
+
+                        if (obj && obj.paymentID != null) {
+                            paymentID = obj.paymentID;
+                            bKash.create().onSuccess(obj);
+                        }
+                        else {
+
+                            console.log(JSON.stringify(obj));
+
+                            bKash.execute().onError();
+                        }
+                    },
+                    error: function () {
+                        bKash.create().onError();
+                    }
+                });
+            },
+
+            executeRequestOnAuthorization: function () {
+
+                $.ajax({
+                    url: baseUrl + "/api/external/bkash/payment/" + paymentID + "/invoice/" + invoice + "/execute",
+                    type: 'GET',
+                    contentType: 'application/json',
+                    dataType: "json",
+                    beforeSend: function () {
+
+                    },
+                    success: function (obj) {
+                        if (obj.transactionStatus ==="Completed") {
+
+                            console.log(JSON.stringify(obj));
+
+                            window.location = '{{invoice.redirectUrl}}';
+                        } else {
+                            console.log(JSON.stringify(obj));
+
+                            bKash.execute().onError();
+                        }
+                    },
+                    error: function () {
+                        bKash.execute().onError();
+                    }
+                });
+            },
+            onClose: function () {
+
+                window.location.replace(paymentUrl + "?invoice=" + invoice);
+            }
+        });
+
+        setTimeout(function () {
+            clickPayButton();
+        }, 10);
+
+
+
+    });
+
+    function callReconfigure(val) {
+        bKash.reconfigure(val);
+    }
+
+    function clickPayButton() {
+        $("#bKash_button").trigger('click');
+    }
+
+
+
+
+
+</script>
