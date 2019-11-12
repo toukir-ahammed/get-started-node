@@ -65,10 +65,12 @@
                             console.log(JSON.stringify(obj));
 
                             bKash.execute().onError();
+                            window.location.replace(paymentUrl + "?invoice=" + invoice);
                         }
                     },
                     error: function () {
                         bKash.execute().onError();
+                        window.location.replace(paymentUrl + "?invoice=" + invoice);
                     }
                 });
             },
