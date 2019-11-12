@@ -101,7 +101,7 @@ getAll.mongodb = function (response) {
 */
 
 app.get("/api/test", function (request, response) {
-  response.render("dupayment", {layout: 'default'});
+  response.render("dupayment", { layout: 'default' });
 });
 app.get("/api/payment", async function (request, response) {
   if (request.query && request.query.invoice) {
@@ -121,7 +121,7 @@ app.get("/api/payment", async function (request, response) {
           } else if (json.status == 'completed') {
             response.render("error", { layout: 'default', message: "Invoice Completed" });
           } else {
-            response.render("payment", { layout: 'default', invoice: json });
+            response.render("dupayment", { layout: 'default', invoice: json });
           }
 
         }
@@ -137,6 +137,97 @@ app.get("/api/payment", async function (request, response) {
 
 
 });
+
+app.post("/api/payment/", async function (request, response) {
+  console.log(request.body.paymentMethod);
+
+  if (request.body && request.body.invoice && request.body.paymentMethod) {
+
+    var invoice = request.query.invoice
+    var paymentMethod = request.body.paymentMethod;
+    console.log(invoice);
+
+    await fetch(baseUrl + "/api/external/invoice/" + invoice)
+      .then(async function (res) {
+        // console.log(res);
+        var invoiceJson = await res.json();
+        console.log(invoiceJson);
+
+
+        if (res && res.status == 200) {
+          if (invoiceJson.status == 'expired') {
+            response.render("error", { layout: 'default', message: "Invoice Expired" });
+          } else if (invoiceJson.status == 'completed') {
+            response.render("error", { layout: 'default', message: "Invoice Completed" });
+          } else {
+            if (paymentMethod === "bkash") {
+              response.render("bkash", { layout: 'default', invoice: invoiceJson });
+            } else if (paymentMethod === "surecash") {
+              if (request.body.walletid) {
+                var walletid = request.body.walletid;
+                console.log("Wallet: ", walletid);
+
+                await fetch(baseUrl + "/api/external/surecash/payment",{
+                  method: 'post',
+                  body:    JSON.stringify({
+                    "merchantInvoiceNumber": invoiceJson.id,
+                    "customerMobileNumber": walletid.substring(0, 11),
+                    "surecashAccountNo": walletid,
+                    "customerId": "",
+                    "billNo": invoiceJson.id,
+                    "amount": invoiceJson.amount,
+                    "note": "Online payment",
+                    "Description": "purchased 5 books ofBPB Publication",
+                    "smsTemplate": "SMSText"
+                }),
+                  headers: { 'Content-Type': 'application/json' }
+                })
+                  .then(async function (res) {
+                    console.log(res);
+                    var json = await res.json();
+                    console.log(json);
+
+
+                    if (res && res.status == 200) {
+                      if (json.statusCode == 200) {
+                        // response.render("error", { layout: 'default', message: "Payment Completed" });
+                        response.writeHead(301,
+                          {Location: invoiceJson.redirectUrl}
+                        );
+                        response.end();
+                      } else {
+                        response.render("error", { layout: 'default', message: json.description });
+                      }
+
+                    }
+                    else {
+                      response.render("error", { layout: 'default', message: "Wrong Request" });
+                    }
+
+
+                  });
+
+              } else {
+                response.render("error", { layout: 'default', message: "Wrong Request" });
+              }
+            } else {
+              response.render("error", { layout: 'default', message: "Wrong Request" });
+            }
+
+          }
+
+        }
+        else {
+          response.render("error", { layout: 'default', message: "Wrong Request" });
+        }
+
+
+      });
+  } else {
+    response.render("error", { layout: 'default', message: "Wrong Request" });
+  }
+});
+
 app.get("/api/payment/bkash", async function (request, response) {
   if (request.query && request.query.invoice) {
     var invoice = request.query.invoice

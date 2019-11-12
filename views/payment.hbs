@@ -134,13 +134,13 @@
         }
     }
 
-    function payBkash() {
+    function paySureCash() {
         var baseUrl = "http://10.100.100.205:8080";
         var paramsString = window.location.search;
         var searchParams = new URLSearchParams(paramsString);
         if (searchParams.has("invoice")) {
             var invoice = searchParams.get("invoice");
-            window.location = baseUrl + "/api/payment/bkash/?invoice=" + invoice;
+            window.location = baseUrl + "/api/payment/surecash/?invoice=" + invoice;
         }
     }
 </script>

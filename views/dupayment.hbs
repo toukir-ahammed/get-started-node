@@ -1,83 +1,57 @@
 <div class="row">
-      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-        <div class="card card-signin my-5">
-          <div class="card-body">
-            <h5 class="card-title text-center"><img src="/assets/dupayLogo.png" width="100%"></h5>
+  <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+    <div class="card card-signin my-5">
+      <div class="card-body">
+        <h5 class="card-title text-center"><img src="/assets/dupayLogo.png" width="100%"></h5>
+        <hr class="my-4">
+        <form action="" method="POST">
+          <div class="btn-groups">
+            <input type="hidden" id="invoice" name="invoice" value="{{invoice.id}}">
+            {{!-- <input type="hidden" name="amount" value="10.00"> --}}
+            <input type="radio" name="paymentMethod" value="bkash" onclick="bkashHandler()"> bKash<br>
+            <input type="radio" name="paymentMethod" value="surecash" onclick="sureCashHandler()"> SureCash<br>
+
             <hr class="my-4">
-            <form class="form-payment" action="" method="POST">
-            <div class="btn-groups">
-                <input type="hidden" id="payment-method" name="payment-method" id="payment-method-hidden" value="">
-                <input type="hidden" id="invoice" name="invoice" value="85DC961C58B1D446">
-                <input type="hidden" name="amount" value="10.00">
-                <input type="hidden" name="network" value="" class="hidden-network">
-                
-                
-                
-                <button class="btn btn-lg btn-primary btn-block" type="submit" id="bkashButton">bKash</button>
-                <button class="btn btn-lg btn-primary btn-block" type="button" id="sureCashButton" onclick="sureCashHandler()">SureCash</button>
-                <hr class="my-4">
-                <div id="sureCash" style="display: none;">
-                    <input type="text" name="walletid" class="form-control " id="surecash-walletid" placeholder="Enter SureCash Wallet ID 01-XXXXXXXXXX">
-                    <hr class="my-4">
-                    <button id="paynowButton" type="submit" class="btn btn-primary btn-lg btn-block">PAY NOW</button>
-                </div>
-                
-            </form>
-          </div>
-        </div>
+            <div id="sureCash" style="display: none;">
+              <input type="text" name="walletid" class="form-control " id="surecash-walletid"
+                placeholder="Enter SureCash Wallet ID 01-XXXXXXXXXX">
+              <hr class="my-4">
+              
+            </div>
+            <button id="paynowButton" type="submit" class="btn btn-primary btn-lg btn-block">PAY NOW</button>
+
+        </form>
       </div>
     </div>
+  </div>
+</div>
 
-    <script>
-        function toggle_visibility(id) {
-            var e = document.getElementById(id);
-            if (e.style.display == 'block')
-                e.style.display = 'none';
-            else
-                e.style.display = 'block';
-        }
+<script>
+  function toggle_visibility(id, flag) {
+    var e = document.getElementById(id);
+    if(flag===0){
+      e.style.display = 'none';
+    }else{
+      e.style.display = 'block';
+    }      
+  }
 
-        function sureCashHandler(){
-            toggle_visibility('sureCash')
-        }
-        $(document).ready(function(){
-        });
-    </script>
+  function sureCashHandler() {
+    toggle_visibility('sureCash',1)
+  }
+  function bkashHandler() {
+    toggle_visibility('sureCash',0)
+  }
 
-
-
-    <form class="new new-cardarea simple-submit" action=""  method="post">
-          <div class="alert alert-danger error-wrapper" role="alert">
-            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-            <span class="error-message"></span>
-          </div>
-          <div class="alert alert-info info-wrapper" role="alert">
-            <span class="info-message"></span>
-          </div>
-                            <ul id="cards" class="card-list ">
-              <li>
-		              <span class="visa"  cardname="VISA" direct="yes"
-		              emi="no"></span>
-		            </li><li>
-		              <span class="mastercard"  cardname="MASTERCARD" direct="yes"
-		              emi="no"></span>
-		            </li><li>
-		              <span class="amex"  cardname="AMEX" direct="yes"
-		              emi="no"></span>
-		            </li><li>
-		              <span class="nexus"  cardname="NEXUS" direct="no"
-		              emi="no"></span>
-		            </li>            </ul>
-            <div class="btn-groups">
-              <input type="hidden" class="payment-method" name="payment-method" id="payment-method-hidden" value="">
-              <input type="hidden" id="invoice" name="invoice" value="85DC961C58B1D446">
-              <input type="hidden" name="amount" value="10.00">
-              <input type="hidden" name="network" value="" class="hidden-network">
-              <div style="position: relative;">
-              <button id="paynowButton1" type="submit" class="btn pay-color btn-primary btn-lg btn-block">PAY NOW</button>
-              <div id="lds-ellipsis" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
-              </div>
-            </div>
-          </form>
-
-          <input type="text" name="walletid" class="form-control mfs-field" id="mfs-walletid" placeholder="Enter SureCash Wallet ID 01-XXXXXXXXXX" style="display: block;">
+  function payBkash() {
+    var baseUrl = "http://10.100.100.205:8080";
+    var paramsString = window.location.search;
+    var searchParams = new URLSearchParams(paramsString);
+    if (searchParams.has("invoice")) {
+      var invoice = searchParams.get("invoice");
+      window.location = baseUrl + "/api/payment/bkash/?invoice=" + invoice;
+    }
+  }
+  $(document).ready(function () {
+  });
+</script>
