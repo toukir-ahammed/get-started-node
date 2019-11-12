@@ -5,7 +5,7 @@
 
         var invoice = "{{invoice.id}}";
         var baseUrl = "http://103.221.253.163:8080";
-        var paymentUrl = "http://10.100.100.205:8080/api/payment"
+        var paymentUrl = "http://103.221.253.163:3000/api/payment"
         var paymentID = null;
         var paymentRequest = { amount: {{invoice.amount}}, intent: 'sale', currency: 'BDT', merchantInvoiceNumber: invoice};
 
