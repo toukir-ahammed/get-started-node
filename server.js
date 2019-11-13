@@ -196,7 +196,7 @@ app.post("/api/payment/", async function (request, response) {
                         );
                         response.end();
                       } else {
-                        response.render("error", { layout: 'default', message: json.description });
+                        response.render("error-surecash", { layout: 'default', message: json.description, retryUrl: "/api/payment?invoice=" + invoiceJson.id });
                       }
 
                     }

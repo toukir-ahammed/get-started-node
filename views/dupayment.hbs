@@ -1,8 +1,12 @@
+<div id="cover-spin"></div>
 <div class="row">
   <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
     <div class="card card-signin my-5">
       <div class="card-body">
         <h5 class="card-title text-center"><img src="/assets/dupayLogo.png" width="100%"></h5>
+        <hr class="my-4">
+        <h6 class="text-center"> Invoice ID: {{invoice.id}}</h6>
+        <h4 class="text-center">Amount: BDT {{invoice.amount}}</h4>
         <hr class="my-4">
         <form action="" method="POST">
           <div class="btn-groups">
@@ -20,7 +24,7 @@
               <hr class="my-4">
               
             </div>
-            <button id="paynowButton" type="submit" class="btn btn-primary btn-lg btn-block">PAY NOW</button>
+            <button id="paynowButton" type="submit" class="btn btn-primary btn-lg btn-block" onclick="showLoader()">PAY NOW</button>
 
         </form>
       </div>
@@ -48,6 +52,10 @@
     toggle_visibility('sureCash',0);
     var e = document.getElementById("paymentMethod");
     e.value = "bkash";
+  }
+
+  function showLoader(){
+    $('#cover-spin').show(0);
   }
 
   function payBkash() {
