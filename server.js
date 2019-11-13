@@ -177,7 +177,7 @@ app.post("/api/payment/", async function (request, response) {
                     "billNo": invoiceJson.id,
                     "amount": invoiceJson.amount,
                     "note": "Online payment",
-                    "Description": "purchased 5 books ofBPB Publication",
+                    "Description": "Description goes here",
                     "smsTemplate": "SMSText"
                 }),
                   headers: { 'Content-Type': 'application/json' }

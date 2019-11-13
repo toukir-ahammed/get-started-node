@@ -59,17 +59,21 @@
                         if (obj.transactionStatus ==="Completed") {
 
                             console.log(JSON.stringify(obj));
+                            alert("Payment Succeeded");
 
                             window.location = '{{invoice.redirectUrl}}';
                         } else {
                             console.log(JSON.stringify(obj));
 
                             bKash.execute().onError();
+
+                            alert("Payment Falied");
                             window.location.replace(paymentUrl + "?invoice=" + invoice);
                         }
                     },
                     error: function () {
                         bKash.execute().onError();
+                        alert("Payment Falied");
                         window.location.replace(paymentUrl + "?invoice=" + invoice);
                     }
                 });
