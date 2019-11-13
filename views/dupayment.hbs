@@ -7,9 +7,11 @@
         <form action="" method="POST">
           <div class="btn-groups">
             <input type="hidden" id="invoice" name="invoice" value="{{invoice.id}}">
-            {{!-- <input type="hidden" name="amount" value="10.00"> --}}
-            <input type="radio" name="paymentMethod" value="bkash" onclick="bkashHandler()"> bKash<br>
-            <input type="radio" name="paymentMethod" value="surecash" onclick="sureCashHandler()"> SureCash<br>
+            <input type="hidden" id="paymentMethod" name="paymentMethod" value="">
+            <button class="btn btn-lg btn-outline-primary" type="button" style="width: 49%;" value="bkash"
+                  onclick="bkashHandler()"><img src="/assets/bkash.jpg" width="100%"></button>
+                <button class="btn btn-lg btn-outline-primary" type="button" style="width: 49%;" value="surecash"
+                  onclick="sureCashHandler()"><img src="/assets/surecash.png" width="100%"></button>
 
             <hr class="my-4">
             <div id="sureCash" style="display: none;">
@@ -37,10 +39,15 @@
   }
 
   function sureCashHandler() {
-    toggle_visibility('sureCash',1)
+
+    toggle_visibility('sureCash',1);
+    var e = document.getElementById("paymentMethod");
+    e.value = "surecash";
   }
   function bkashHandler() {
-    toggle_visibility('sureCash',0)
+    toggle_visibility('sureCash',0);
+    var e = document.getElementById("paymentMethod");
+    e.value = "bkash";
   }
 
   function payBkash() {
